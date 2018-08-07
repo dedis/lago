@@ -18,7 +18,7 @@ func (p *Poly) NTT() (*Poly, error) {
 		for i := uint32(0); i < m; i++ {
 			j1 = 2 * i * t
 			j2 = j1 + t - 1
-			S = bigint.NewInt(int64(psiReverse[m+i]))
+			S = bigint.NewInt(int64(p.psiReverse[m+i]))
 			for j := j1; j <= j2; j++ {
 				// TODO: implement fast reduction algorithms
 				U.SetBigInt(&p.coeffs[j])
@@ -45,7 +45,7 @@ func (p *Poly) InverseNTT() (*Poly, error) {
 		h = m >> 1
 		for i := uint32(0); i < h; i++ {
 			j2 = j1 + t - 1
-			S = bigint.NewInt(int64(psiInvReverse[h+i]))
+			S = bigint.NewInt(int64(p.psiInvReverse[h+i]))
 			for j := j1; j <= j2; j++ {
 				U.SetBigInt(&p.coeffs[j])
 				V.SetBigInt(&p.coeffs[j+t])
@@ -66,4 +66,3 @@ func (p *Poly) InverseNTT() (*Poly, error) {
 	}
 	return p, nil
 }
-

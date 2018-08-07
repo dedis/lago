@@ -3,6 +3,7 @@ package crypto
 import (
 	"github.com/dedis/student_18_lattices/ring"
 	"github.com/dedis/student_18_lattices/bigint"
+	"fmt"
 )
 
 type FV struct {
@@ -36,14 +37,18 @@ func (fv *FV) KeyGenerate() {
 	if fv.N == 0 || fv.Q.EqualTo(bigint.NewInt(0)) {
 		panic("Invalid FV context")
 	}
-	fv.PrivateKey.s = ring.NewUniformPoly(fv.N, *bigint.NewInt(int64(2)))
-	fv.PrivateKey.s.Q = fv.Q
-	fv.PublicKey.pub1 = ring.NewUniformPoly(fv.N, fv.Q)
-	e := ring.NewGaussPolyFromBLISS(fv.N, fv.Q)
-	fv.PublicKey.pub0 = ring.NewUniformPoly(fv.N, fv.Q)
-	fv.PublicKey.pub0.MulPoly(fv.PublicKey.pub1, fv.PrivateKey.s)
-	fv.PublicKey.pub0.Add(fv.PublicKey.pub0, e)
-	fv.PublicKey.pub0.Neg(fv.PublicKey.pub0)
+	// generate private key
+	fv.PrivateKey.s = ring.NewUniformPoly(fv.N, fv.Q, *bigint.NewInt(int64(2)))
+
+	//generate public key: pub0 = e - a * sk, pub1 = a
+	a := ring.NewGaussPoly(fv.N, fv.Q, fv.Q)
+	fv.PublicKey.pub1 = ring.NewRing(fv.N, fv.Q)
+	fv.PublicKey.pub1.Poly.SetCoefficients(a.Poly.GetCoefficients())
+	b := ring.NewGaussPoly(fv.N, fv.Q, *bigint.NewInt(int64(2)))
+
+	a.MulPoly(a, fv.PrivateKey.s)
+
+	fv.PublicKey.pub0, _ = b.Sub(b, a)
 }
 
 func (fv *FV) Encrypt(m *Plaintext) *Ciphertext {
@@ -51,27 +56,33 @@ func (fv *FV) Encrypt(m *Plaintext) *Ciphertext {
 	newM := ring.NewRing(fv.N, fv.Q)
 	delta.Div(&fv.Q, &fv.T)
 	newM.MulScalar(m.Msg, delta)
-	u := ring.NewUniformPoly(fv.N, *bigint.NewInt(int64(2)))
-	u.Q = fv.Q
-	e1 := ring.NewGaussPolyFromBLISS(fv.N, fv.Q)
-	e2 := ring.NewGaussPolyFromBLISS(fv.N, fv.Q)
+	newM.Mod(newM, fv.Q)
+
+	u := ring.NewUniformPoly(fv.N, fv.Q, *bigint.NewInt(int64(2)))
+	e1 := ring.NewGaussPoly(fv.N, fv.Q, *bigint.NewInt(int64(2)))
+	fmt.Println(e1.GetCoefficientsInt64())
+	e2 := ring.NewGaussPoly(fv.N, fv.Q, *bigint.NewInt(int64(2)))
+
 	c := new(Ciphertext)
 	c.c0 = ring.NewRing(fv.N, fv.Q)
 	c.c1 = ring.NewRing(fv.N, fv.Q)
+
 	c.c0.MulPoly(fv.PublicKey.pub0, u)
 	c.c0.Add(c.c0, e1)
 	c.c0.Add(c.c0, newM)
+
 	c.c1.MulPoly(fv.PublicKey.pub1, u)
 	c.c1.Add(c.c1, e2)
+
 	return c
 }
 
 func (fv *FV) Decrypt(c *Ciphertext) *Plaintext {
 	m := new(Plaintext)
 	m.Msg = ring.NewRing(fv.N, fv.Q)
-	m.Msg.MulPoly(c.c1, fv.PrivateKey.s)
-	m.Msg.Add(m.Msg, c.c0)
-	m.Msg.MulScalar(m.Msg, fv.T)
+	c.c1.MulPoly(c.c1, fv.PrivateKey.s)
+	c.c0.Add(c.c0, c.c1)
+	m.Msg.MulScalar(c.c0, fv.T)
 	m.Msg.DivRound(m.Msg, fv.Q)
 	m.Msg.Mod(m.Msg, fv.T)
 	return m

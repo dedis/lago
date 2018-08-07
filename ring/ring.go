@@ -22,14 +22,26 @@ func NewRing(n uint32, q bigint.Int) *Ring {
 	return r
 }
 
-func NewGaussPoly(n uint32, q bigint.Int) *Ring {
+func NewGaussPoly(n uint32, q bigint.Int, m bigint.Int) *Ring {
 	r := new(Ring)
 	r.N = n
 	r.Q = q
 	r.Poly, _ = polynomial.NewPolynomial(n, q)
 	coeffs := make([]bigint.Int, n)
+	var coeff bigint.Int
+	negM := new(bigint.Int).Neg(&m, &q)
 	for i := range coeffs {
-		coeffs[i].SetInt(int64(GaussSampling(118, 100)))
+		for {
+			coeff.SetInt(int64(GaussSampling(118, 10)))
+			coeff.Mod(&coeff, &q)
+			if coeff.Compare(&m) == 1 {
+				if coeff.Compare(negM) == -1 {
+					continue
+				}
+			}
+			coeffs[i].SetBigInt(&coeff)
+			break
+		}
 	}
 	r.Poly.SetCoefficients(coeffs)
 	return r
@@ -57,14 +69,14 @@ func NewGaussPolyFromBLISS(n uint32, q bigint.Int) *Ring {
 	return r
 }
 
-func NewUniformPoly(n uint32, q bigint.Int) *Ring {
+func NewUniformPoly(n uint32, q bigint.Int, m bigint.Int) *Ring {
 	r := new(Ring)
 	r.N = n
 	r.Q = q
 	r.Poly, _ = polynomial.NewPolynomial(n, q)
 	coeffs := make([]bigint.Int, n)
 	for i := range coeffs {
-		coeffs[i].SetInt(int64(randUniform(q.Uint32())))
+		coeffs[i].SetInt(int64(randUniform(m.Uint32())))
 	}
 	r.Poly.SetCoefficients(coeffs)
 	return r
@@ -111,6 +123,14 @@ func (r *Ring) MulPoly(r1, r2 *Ring) (*Ring, error) {
 		return nil, errors.New("unmatched degree or module")
 	}
 	r.Poly.MulPoly(r1.Poly, r2.Poly)
+	return r, nil
+}
+
+func (r *Ring) DebugMulPoly(r1, r2 *Ring) (*Ring, error) {
+	if r1.N != r2.N || !r1.Q.EqualTo(&r2.Q) {
+		return nil, errors.New("unmatched degree or module")
+	}
+	r.Poly.DebugMulPoly(r1.Poly, r2.Poly)
 	return r, nil
 }
 

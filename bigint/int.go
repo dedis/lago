@@ -71,6 +71,12 @@ func (i *Int) DivRound(a, b *Int) *Int {
 	return i
 }
 
+// Exp sets the target i to a^b mod m
+func (i *Int) Exp(a , b, m *Int) *Int {
+	i.Value.Exp(&a.Value, &b.Value, &m.Value)
+	return i
+}
+
 // Mod sets the target i to a mod m.
 func (i *Int) Mod(a, m *Int) *Int {
 	i.Value.Mod(&a.Value, &m.Value)
@@ -85,7 +91,7 @@ func (i *Int) Inv(a, m *Int) *Int {
 
 // Neg sets the target i to -a mod m.
 func (i *Int) Neg(a, m *Int) *Int {
-	i.Value.Neg(&i.Value)
+	i.Value.Neg(&a.Value)
 	i.Mod(i, m)
 	return i
 }
@@ -98,6 +104,16 @@ func (i *Int) EqualTo(i2 *Int) bool {
 	} else {
 		return false
 	}
+}
+
+// Cmp compares i and i2 and returns:
+//
+//   -1 if i <  i2
+//    0 if i == i2
+//   +1 if i >  i2
+//
+func (i *Int) Compare(i2 *Int) int{
+	return i.Value.Cmp(&i2.Value)
 }
 
 // Bits returns the bit stream and bit length of i's absolute value.

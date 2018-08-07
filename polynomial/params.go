@@ -1,44 +1,184 @@
 package polynomial
 
-const (
-	N = 256
-	Q = 7681
+import (
+	"github.com/dedis/student_18_lattices/bigint"
 )
 
-var psiReverse = [N]uint32{
-	1, 3383, 1925, 6468, 7098, 1728, 6832, 527, 5235, 5300, 7584, 2132, 5033, 5543, 2784, 1366,
-	5413, 675, 4589, 1286, 1112, 5887, 5282, 3000, 1846, 365, 4928, 3654, 6803, 2273, 7351, 5036,
-	3449, 528, 2941, 2508, 1655, 7097, 5941, 4907, 5165, 6601, 3411, 2551, 7438, 7479, 766, 2881,
-	4607, 732, 4601, 3477, 2469, 3380, 5967, 693, 6986, 6882, 6300, 5806, 5773, 4957, 6299, 2423,
-	2028, 1591, 1952, 5637, 550, 1848, 6453, 1097, 1438, 2681, 2990, 6974, 6556, 3901, 417, 5088,
-	1415, 1682, 4801, 4149, 4603, 2562, 4582, 648, 3041, 2844, 1003, 5828, 1408, 1044, 6688, 4959,
-	4862, 3125, 3892, 1402, 7424, 6203, 4540, 4501, 5417, 6526, 4608, 4115, 6461, 5118, 1886, 5108,
-	2900, 2063, 6094, 198, 6801, 3188, 3501, 7462, 3844, 319, 2897, 7276, 1800, 6048, 869, 5685,
-	7146, 2811, 7060, 3751, 4665, 4921, 1036, 2252, 2840, 6470, 5809, 3849, 3376, 7042, 674, 6566,
-	7463, 7563, 2805, 3280, 4198, 7346, 738, 329, 3239, 4431, 5784, 3765, 1189, 5224, 7568, 1771,
-	5906, 1717, 1170, 2395, 5571, 5200, 1499, 1657, 1885, 1725, 3193, 2433, 7109, 536, 4964, 2546,
-	856, 111, 4066, 6288, 217, 4416, 2951, 5614, 3137, 5010, 1459, 4595, 6888, 5631, 1994, 1784,
-	5722, 1406, 296, 2838, 5309, 2169, 4095, 4542, 6451, 2012, 5679, 1876, 2757, 2197, 7335, 4675,
-	3394, 6488, 4600, 94, 2996, 4229, 6550, 6646, 1437, 6979, 1065, 506, 7139, 2173, 1266, 4561,
-	2689, 2583, 7012, 2668, 6918, 7268, 5977, 3799, 5323, 3445, 321, 2922, 7496, 3987, 4882, 1656,
-	62, 2359, 4135, 1604, 2259, 7283, 1129, 1950, 1968, 5998, 1667, 1607, 4806, 5702, 3626, 201,
+type params struct {
+	n uint32
+	q bigint.Int
+	PsiReverse []bigint.Int
+	PsiInvReverse []bigint.Int
 }
 
-var psiInvReverse = [N]uint32{
-	1, 4298, 1213, 5756, 7154, 849, 5953, 583, 6315, 4897, 2138, 2648, 5549, 97, 2381, 2446,
-	2645, 330, 5408, 878, 4027, 2753, 7316, 5835, 4681, 2399, 1794, 6569, 6395, 3092, 7006, 2268,
-	5258, 1382, 2724, 1908, 1875, 1381, 799, 695, 6988, 1714, 4301, 5212, 4204, 3080, 6949, 3074,
-	4800, 6915, 202, 243, 5130, 4270, 1080, 2516, 2774, 1740, 584, 6026, 5173, 4740, 7153, 4232,
-	1996, 6812, 1633, 5881, 405, 4784, 7362, 3837, 219, 4180, 4493, 880, 7483, 1587, 5618, 4781,
-	2573, 5795, 2563, 1220, 3566, 3073, 1155, 2264, 3180, 3141, 1478, 257, 6279, 3789, 4556, 2819,
-	2722, 993, 6637, 6273, 1853, 6678, 4837, 4640, 7033, 3099, 5119, 3078, 3532, 2880, 5999, 6266,
-	2593, 7264, 3780, 1125, 707, 4691, 5000, 6243, 6584, 1228, 5833, 7131, 2044, 5729, 6090, 5653,
-	7480, 4055, 1979, 2875, 6074, 6014, 1683, 5713, 5731, 6552, 398, 5422, 6077, 3546, 5322, 7619,
-	6025, 2799, 3694, 185, 4759, 7360, 4236, 2358, 3882, 1704, 413, 763, 5013, 669, 5098, 4992,
-	3120, 6415, 5508, 542, 7175, 6616, 702, 6244, 1035, 1131, 3452, 4685, 7587, 3081, 1193, 4287,
-	3006, 346, 5484, 4924, 5805, 2002, 5669, 1230, 3139, 3586, 5512, 2372, 4843, 7385, 6275, 1959,
-	5897, 5687, 2050, 793, 3086, 6222, 2671, 4544, 2067, 4730, 3265, 7464, 1393, 3615, 7570, 6825,
-	5135, 2717, 7145, 572, 5248, 4488, 5956, 5796, 6024, 6182, 2481, 2110, 5286, 6511, 5964, 1775,
-	5910, 113, 2457, 6492, 3916, 1897, 3250, 4442, 7352, 6943, 335, 3483, 4401, 4876, 118, 218,
-	1115, 7007, 639, 4305, 3832, 1872, 1211, 4841, 5429, 6645, 2760, 3016, 3930, 621, 4870, 535,
+// generateNTTParameters generates the parameters for NTT and inverse NTT transformations.
+func GenerateNTTParameters(N uint32, Q bigint.Int) (*params, error) {
+	// TODO Check if Q is a prime number
+	// TODO Check if Q/(2N) is an integer
+	newNttParams := new(params)
+	newNttParams.n = N
+	newNttParams.q.SetBigInt(&Q)
+
+	// 1. First, set primitive root g = 2, and fi = q-1
+	g := primitiveRoot(&Q)
+	fi := new(bigint.Int)
+	fi.Sub(&Q, bigint.NewInt(1))  // fi = q - 1
+
+	// 2. Second, calculate 2N-th root of unity and its inverse, i.e. psi = g^(fi/2N) mod q, and psi^-1 mod q.
+	_2n := bigint.NewInt(2)
+	_2n.Mul(_2n, bigint.NewInt(int64(N)))
+	power := new(bigint.Int)
+	power.SetBigInt(fi)
+	power.Div(fi, _2n)
+	psi := new(bigint.Int)
+	psi.Exp(g, power, &Q)
+
+	powerInv := new(bigint.Int)
+	powerInv.Sub(fi, power)
+	psiInv := new(bigint.Int)
+	psiInv.Exp(g, powerInv, &Q)
+
+	// 3. Third, calculate powers of psi and psiInv in bit-reversed order
+	newNttParams.PsiReverse = make([]bigint.Int, N)
+	newNttParams.PsiInvReverse = make([]bigint.Int, N)
+
+	// computing the bit length of N
+	var bitLenofN uint32
+	for i := 32-1; i >= 0; i-- {
+		if N & (1 << uint(i)) != 0 {
+			bitLenofN = uint32(i)
+			break
+		}
+	}
+	// computing psiReverse and psiInvReverse
+	var indexReverse uint32
+	var _i bigint.Int
+	for i := uint32(0); i < N; i++ {
+		_i.SetInt(int64(i))
+		indexReverse = bitReverse(i, bitLenofN)
+		newNttParams.PsiReverse[indexReverse].Exp(psi, &_i, &Q)
+		newNttParams.PsiInvReverse[indexReverse].Exp(psiInv, &_i, &Q)
+	}
+
+	return newNttParams, nil
+}
+
+func (p *params) GetPsiReverseUint32() []uint32 {
+	psi := make([]uint32, p.n)
+	for i := uint32(0); i < p.n; i++ {
+		psi[i] = uint32(p.PsiReverse[i].Int64())
+	}
+	return psi
+}
+
+func (p *params) GetPsiInvReverseUint32() []uint32 {
+	psiInv := make([]uint32, p.n)
+	for i := uint32(0); i < p.n; i++ {
+		psiInv[i] = uint32(p.PsiInvReverse[i].Int64())
+	}
+	return psiInv
+}
+
+// bitReverse calculates the bit-reverse index.
+// for example, given index=6 (110) and its bit-length bitLen=3, the indexReverse would be 3 (011)
+func bitReverse(index, bitLen uint32)  uint32{
+	indexReverse := uint32(0)
+	for i := uint32(0); i < bitLen; i++ {
+		if (index >> i) & 1 != 0 {
+			indexReverse |= 1 << (bitLen - 1 - i)
+		}
+	}
+	return indexReverse
+}
+
+// polynomialPollardsRho calculates x1^2 + c mod x2, and is used in factorizationPollardsRho
+func polynomialPollardsRho(x1, x2, c *bigint.Int) *bigint.Int{
+	two := bigint.NewInt(2)
+	z := new(bigint.Int).Exp(x1, two, x2) // x1^2 mod x2
+	z.Add(z, c)                   // (x1^2 mod x2) + 1
+	z.Mod(z, x2)                     // (x1^2 + 1) mod x2
+	return z
+}
+
+// factorizationPollardsRho realizes Pollard's Rho algorithm for fast prime factorization,
+// but this function only returns one factor a time
+func factorizationPollardsRho (m *bigint.Int) *bigint.Int {
+	var x, y, d, c *bigint.Int
+	one := bigint.NewInt(1)
+	ten := bigint.NewInt(10)
+
+	// c is to change the polynomial used in Pollard's Rho algorithm,
+	// Every time the algorithm fails to get a factor, increasing c to retry,
+	// because Pollard's Rho algorithm sometimes will miss some small prime factors.
+	for c = bigint.NewInt(1); !c.EqualTo(ten); c.Add(c, one){
+		x, y, d = bigint.NewInt(2), bigint.NewInt(2), bigint.NewInt(1)
+		for d.EqualTo(one) {
+			x = polynomialPollardsRho(x, m, c)
+			y = polynomialPollardsRho(polynomialPollardsRho(y, m, c), m, c)
+			sub := new(bigint.Int).Sub(x, y)
+			d.Value.GCD(nil, nil, sub.Value.Abs(&sub.Value), &m.Value)
+		}
+	}
+
+	if d.EqualTo(m) {
+		return one
+	}
+	return d
+}
+
+// getFactors returns all the prime factors of m
+func getFactors(n *bigint.Int) []bigint.Int {
+	var factor *bigint.Int
+	var factors []bigint.Int
+	var subFactors []bigint.Int
+	var m, tmp bigint.Int
+	m.SetBigInt(n)
+	zero := bigint.NewInt(0)
+	two := bigint.NewInt(2)
+
+	// first, turn m into odd, and add 2 as a factor
+	for tmp.Mod(&m, two).EqualTo(zero) {
+		m.Div(&m, two)
+	}
+	if !m.EqualTo(n) {
+		factors = append(factors, *two)
+	}
+
+	// second, find other prime factors
+	for {
+		factor = factorizationPollardsRho(&m)
+		if factor.EqualTo(zero) {
+			factors = append(factors, m)
+			break
+		}
+		m.Div(&m, factor)
+		if len(factors) > 0 && factor.EqualTo(&factors[len(factors)-1]) {
+			continue
+		}
+		factors = append(factors, subFactors...)
+	}
+	return factors
+}
+
+// primitiveRoot calculates one primitive root of prime q
+func primitiveRoot(q *bigint.Int) *bigint.Int {
+	tmp := new(bigint.Int)
+	notFoundPrimitiveRoot := true
+	qMinusOne := new(bigint.Int).Sub(q, bigint.NewInt(1))
+	factors := getFactors(qMinusOne)
+	g := bigint.NewInt(2)
+	one := bigint.NewInt(1)
+	for notFoundPrimitiveRoot {
+		g.Add(g, one)
+		for _, factor := range factors {
+			tmp.Div(qMinusOne, &factor)
+			// once exist g^(q-1)/factor = 1 mod q, g is not a primitive root
+			if tmp.Exp(g, tmp, q).EqualTo(one) {
+				notFoundPrimitiveRoot = true
+				break
+			}
+			notFoundPrimitiveRoot = false
+		}
+	}
+	return g
 }
