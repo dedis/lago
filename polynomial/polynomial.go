@@ -10,8 +10,8 @@ type Poly struct {
 	coeffs []bigint.Int
 	n      uint32
 	q      bigint.Int
-	psiReverse []uint32
-	psiInvReverse []uint32
+	psiReverse []bigint.Int
+	psiInvReverse []bigint.Int
 }
 
 // NewPolynomial creates a new polynomial with a given degree N and module Q
@@ -20,8 +20,8 @@ func NewPolynomial(N uint32, Q bigint.Int) (*Poly, error) {
 		return nil, errors.New("polynomial degree N has to be power of 2")
 	}
 	nttparams, _ := GenerateNTTParameters(N, Q)
-	psiReverse := nttparams.GetPsiReverseUint32()
-	psiInvReverse := nttparams.GetPsiInvReverseUint32()
+	psiReverse := nttparams.PsiReverse
+	psiInvReverse := nttparams.PsiInvReverse
 	p := &Poly{make([]bigint.Int, N), N, Q, psiReverse, psiInvReverse}
 	for i := range p.coeffs {
 		p.coeffs[i].SetInt(0)

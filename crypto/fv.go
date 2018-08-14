@@ -12,6 +12,7 @@ type FV struct {
 	T bigint.Int
 	PublicKey *publicKey
 	PrivateKey *privateKey
+	Sigma float64
 }
 
 type publicKey struct {
@@ -30,6 +31,7 @@ func NewFVContext(N uint32, Q, T bigint.Int) *FV {
 	fv.T = T
 	fv.PublicKey = new(publicKey)
 	fv.PrivateKey = new(privateKey)
+	fv.Sigma = 3.19
 	return fv
 }
 
@@ -41,10 +43,10 @@ func (fv *FV) KeyGenerate() {
 	fv.PrivateKey.s = ring.NewUniformPoly(fv.N, fv.Q, *bigint.NewInt(int64(2)))
 
 	//generate public key: pub0 = e - a * sk, pub1 = a
-	a := ring.NewGaussPoly(fv.N, fv.Q, fv.Q)
+	a := ring.NewGaussPoly(fv.N, fv.Q, fv.Sigma)
 	fv.PublicKey.pub1 = ring.NewRing(fv.N, fv.Q)
 	fv.PublicKey.pub1.Poly.SetCoefficients(a.Poly.GetCoefficients())
-	b := ring.NewGaussPoly(fv.N, fv.Q, *bigint.NewInt(int64(2)))
+	b := ring.NewGaussPoly(fv.N, fv.Q, fv.Sigma)
 
 	a.MulPoly(a, fv.PrivateKey.s)
 
@@ -59,9 +61,9 @@ func (fv *FV) Encrypt(m *Plaintext) *Ciphertext {
 	newM.Mod(newM, fv.Q)
 
 	u := ring.NewUniformPoly(fv.N, fv.Q, *bigint.NewInt(int64(2)))
-	e1 := ring.NewGaussPoly(fv.N, fv.Q, *bigint.NewInt(int64(2)))
+	e1 := ring.NewGaussPoly(fv.N, fv.Q, fv.Sigma)
 	fmt.Println(e1.GetCoefficientsInt64())
-	e2 := ring.NewGaussPoly(fv.N, fv.Q, *bigint.NewInt(int64(2)))
+	e2 := ring.NewGaussPoly(fv.N, fv.Q, fv.Sigma)
 
 	c := new(Ciphertext)
 	c.c0 = ring.NewRing(fv.N, fv.Q)

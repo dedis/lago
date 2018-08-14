@@ -15,6 +15,17 @@ func NewInt(v int64) *Int {
 	return i
 }
 
+// NewIntFromString creates a new Int from a string.
+// A prefix of ``0x'' or ``0X'' selects base 16;
+// the ``0'' prefix selects base 8, and
+// a ``0b'' or ``0B'' prefix selects base 2.
+// Otherwise the selected base is 10.
+func NewIntFromString(s string) *Int {
+	i := new(Int)
+	i.Value.SetString(s, 0)
+	return i
+}
+
 // SetInt sets Int i with value v
 func (i *Int) SetInt(v int64) {
 	i.Value.SetInt64(v)
@@ -26,8 +37,12 @@ func (i *Int) SetBigInt(v *Int) {
 }
 
 // SetString sets the value of i from a string
-func (i *Int) SetString(s string, base int64) {
-	i.Value.SetString(s, int(base))
+// A prefix of ``0x'' or ``0X'' selects base 16;
+// the ``0'' prefix selects base 8, and
+// a ``0b'' or ``0B'' prefix selects base 2.
+// Otherwise the selected base is 10.
+func (i *Int) SetString(s string) {
+	i.Value.SetString(s, 0)
 }
 
 // Add sets the target i to a + b.
@@ -48,25 +63,33 @@ func (i *Int) Mul(a, b *Int) *Int {
 	return i
 }
 
-// Div sets the target i to a / b without reminder.
+// Div sets the target i to ceil(a / b), which is the closest integer to zero for a/b
 func (i *Int) Div(a, b *Int) *Int {
-	i.Value.Div(&a.Value, &b.Value)
+	i.Value.Quo(&a.Value, &b.Value)
 	return i
 }
 
-// DivRound sets the target i to the integer closet to a / b .
+// DivRound sets the target i to the integer closest to a / b .
 func (i *Int) DivRound(a, b *Int) *Int {
+	zero := NewInt(0)
+	if a.EqualTo(zero) {
+		return zero
+	}
 	_a := NewInt(1)
 	_a.SetBigInt(a)
 	_b := NewInt(1)
 	_b.SetBigInt(b)
-	i.Value.Div(&_a.Value, &_b.Value)
 	r := NewInt(1)
-	r.Mod(_a, _b)
+	i.Value.Quo(&_a.Value, &_b.Value)
+	r.Value.Rem(&_a.Value, &_b.Value)
 	midValue := NewInt(1)
-	midValue.Div(_b, NewInt(2))
-	if r.Value.Cmp(&midValue.Value) == 1.0 {
-		i.Add(i, NewInt(1))
+	midValue.Value.Quo(&_b.Value, &NewInt(2).Value)
+	if !(NewInt(1).Value.Abs(&r.Value).Cmp(NewInt(1).Value.Abs(&midValue.Value)) == -1.0) {
+		if i.Value.Cmp(&zero.Value) == -1.0 {
+			i.Sub(i, NewInt(1))
+		} else {
+			i.Add(i, NewInt(1))
+		}
 	}
 	return i
 }
@@ -117,11 +140,14 @@ func (i *Int) Compare(i2 *Int) int{
 }
 
 // Bits returns the bit stream and bit length of i's absolute value.
+// For example, 6=110, this function will return ([0, 1, 1], 3)
 func (i *Int) Bits() ([]uint, uint) {
-	n := i.Value.BitLen()
+	var z Int
+	z.Value.Abs(&i.Value)
+	n := z.Value.BitLen()
 	bits := make([]uint, n)
 	for j := 0; j < n; j++ {
-		bits[j] = i.Value.Bit(j)
+		bits[j] = z.Value.Bit(j)
 	}
 	return bits, uint(n)
 }

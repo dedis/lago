@@ -10,7 +10,7 @@ import (
 func main() {
 	N := uint32(256)
 	Q := bigint.NewInt(int64(7681))
-	T := bigint.NewInt(int64(10))
+	T := bigint.NewInt(int64(20))
 	fv := crypto.NewFVContext(N, *Q, *T)
 	fv.KeyGenerate()
 	plain := new(crypto.Plaintext)

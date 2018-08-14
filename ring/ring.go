@@ -22,20 +22,25 @@ func NewRing(n uint32, q bigint.Int) *Ring {
 	return r
 }
 
-func NewGaussPoly(n uint32, q bigint.Int, m bigint.Int) *Ring {
+// NewGaussPoly creates a new polynomial ring,
+// the parameters of which obey discrete gaussian distribution with derivation sigma
+func NewGaussPoly(n uint32, q bigint.Int, sigma float64) *Ring {
 	r := new(Ring)
 	r.N = n
 	r.Q = q
 	r.Poly, _ = polynomial.NewPolynomial(n, q)
 	coeffs := make([]bigint.Int, n)
 	var coeff bigint.Int
-	negM := new(bigint.Int).Neg(&m, &q)
+
+	boundMultiplier := float64(6)  // this parameter is the same as the SEAL library
+	positiveBound := bigint.NewInt(int64(boundMultiplier * sigma))  // the suggested sigma from SEAL is 3.19
+	negativeBound := bigint.NewInt(-int64(boundMultiplier * sigma))
 	for i := range coeffs {
 		for {
-			coeff.SetInt(int64(GaussSampling(118, 10)))
+			coeff.SetInt(int64(GaussSampling(sigma)))
 			coeff.Mod(&coeff, &q)
-			if coeff.Compare(&m) == 1 {
-				if coeff.Compare(negM) == -1 {
+			if coeff.Compare(positiveBound) == 1 {
+				if coeff.Compare(negativeBound) == -1 {
 					continue
 				}
 			}
@@ -69,14 +74,16 @@ func NewGaussPolyFromBLISS(n uint32, q bigint.Int) *Ring {
 	return r
 }
 
-func NewUniformPoly(n uint32, q bigint.Int, m bigint.Int) *Ring {
+// NewUniformPoly creates a new polynomial ring,
+// the parameters of which obey uniform distribution [0, v)
+func NewUniformPoly(n uint32, q bigint.Int, v bigint.Int) *Ring {
 	r := new(Ring)
 	r.N = n
 	r.Q = q
 	r.Poly, _ = polynomial.NewPolynomial(n, q)
 	coeffs := make([]bigint.Int, n)
 	for i := range coeffs {
-		coeffs[i].SetInt(int64(randUniform(m.Uint32())))
+		coeffs[i].SetInt(int64(randUniform(v.Uint32())))
 	}
 	r.Poly.SetCoefficients(coeffs)
 	return r

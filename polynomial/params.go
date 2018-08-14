@@ -63,22 +63,6 @@ func GenerateNTTParameters(N uint32, Q bigint.Int) (*params, error) {
 	return newNttParams, nil
 }
 
-func (p *params) GetPsiReverseUint32() []uint32 {
-	psi := make([]uint32, p.n)
-	for i := uint32(0); i < p.n; i++ {
-		psi[i] = uint32(p.PsiReverse[i].Int64())
-	}
-	return psi
-}
-
-func (p *params) GetPsiInvReverseUint32() []uint32 {
-	psiInv := make([]uint32, p.n)
-	for i := uint32(0); i < p.n; i++ {
-		psiInv[i] = uint32(p.PsiInvReverse[i].Int64())
-	}
-	return psiInv
-}
-
 // bitReverse calculates the bit-reverse index.
 // for example, given index=6 (110) and its bit-length bitLen=3, the indexReverse would be 3 (011)
 func bitReverse(index, bitLen uint32)  uint32{
