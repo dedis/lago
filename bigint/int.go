@@ -1,6 +1,8 @@
 package bigint
 
-import "github.com/dedis/student_18_lattices/big"
+import (
+	"github.com/dedis/student_18_lattices/big"
+)
 
 // Int is a generic implementation of natural arithmetic on integers,
 // built using Go's built-in "math/big.Int"
@@ -71,24 +73,17 @@ func (i *Int) Div(a, b *Int) *Int {
 
 // DivRound sets the target i to the integer closest to a / b .
 func (i *Int) DivRound(a, b *Int) *Int {
-	zero := NewInt(0)
-	if a.EqualTo(zero) {
-		return zero
-	}
 	_a := NewInt(1)
 	_a.SetBigInt(a)
-	_b := NewInt(1)
-	_b.SetBigInt(b)
+	i.Value.Quo(&_a.Value, &b.Value)
 	r := NewInt(1)
-	i.Value.Quo(&_a.Value, &_b.Value)
-	r.Value.Rem(&_a.Value, &_b.Value)
-	midValue := NewInt(1)
-	midValue.Value.Quo(&_b.Value, &NewInt(2).Value)
-	if !(NewInt(1).Value.Abs(&r.Value).Cmp(NewInt(1).Value.Abs(&midValue.Value)) == -1.0) {
-		if i.Value.Cmp(&zero.Value) == -1.0 {
-			i.Sub(i, NewInt(1))
-		} else {
+	r.Value.Rem(&_a.Value, &b.Value)
+	r2 := NewInt(1).Mul(r, NewInt(2))
+	if r2.Value.CmpAbs(&b.Value) != -1.0 {
+		if _a.Value.Sign() == b.Value.Sign() {
 			i.Add(i, NewInt(1))
+		} else {
+			i.Sub(i, NewInt(1))
 		}
 	}
 	return i
@@ -116,6 +111,24 @@ func (i *Int) Inv(a, m *Int) *Int {
 func (i *Int) Neg(a, m *Int) *Int {
 	i.Value.Neg(&a.Value)
 	i.Mod(i, m)
+	return i
+}
+
+// Lsh sets the target i to a << m.
+func (i *Int) Lsh(a *Int, m uint32) *Int {
+	i.Value.Lsh(&a.Value, uint(m))
+	return i
+}
+
+// Rsh sets the target i to a >> m.
+func (i *Int) Rsh(a *Int, m uint32) *Int {
+	i.Value.Rsh(&a.Value, uint(m))
+	return i
+}
+
+// And sets the target i to a & b.
+func (i *Int) And(a, b *Int) *Int {
+	i.Value.And(&a.Value, &b.Value)
 	return i
 }
 
@@ -160,4 +173,43 @@ func (i *Int) Uint32() uint32 {
 // Int64 returns the low 64 bits of i as int64
 func (i *Int) Int64() int64 {
 	return i.Value.Int64()
+}
+
+
+func MontgomeryReduce(x, q, qInv, montgomeryMod *Int, bitLen uint32) *Int{
+	u := new(Int).Mul(x, qInv)
+	u.And(u, montgomeryMod)
+	u.Mul(u, q)
+	x.Add(x, u)
+	x.Rsh(x, bitLen)
+	if x.Compare(q) != -1.0 {
+		return x.Sub(x, q)
+	}
+	return x
+}
+
+func montgomeryReduce(a int64) int64 {
+	u := a * 7679
+	u &= (1 << 18) - 1
+	u *= 7681
+	a += u
+	a = int64(a >> 18)
+	if a >= 7681 {
+		return a - 7681
+	}
+	return a
+}
+
+func BarrettReduce(x, q *Int) *Int {
+	u := new(Int).Rsh(x, uint32(13)) // ((uint32_t) a * sinv) >> 16
+	u.Mul(u, q)
+	x.Sub(x, u)
+	return x
+}
+
+func barrettReduce(a int64) int64 {
+	u := int64(a >> 13) // ((uint32_t) a * sinv) >> 16
+	u *= 7681
+	a -= int64(u)
+	return a
 }

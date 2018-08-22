@@ -1,6 +1,8 @@
 package bigint
 
-import "testing"
+import (
+	"testing"
+)
 
 
 // test vectors for function Add
@@ -32,10 +34,18 @@ func TestAdd(t *testing.T) {
 
 func BenchmarkAdd(b *testing.B) {
 	var z Int
-	x := NewIntFromString("123456789123456789123456789123456789")
-	y := NewIntFromString("-987654321987654321987654321987654321")
+	x := NewIntFromString("123456789")
+	y := NewIntFromString("987654321")
 	for i := 0; i < b.N; i++ {
 		z.Add(x, y)
+	}
+}
+
+func BenchmarkAddDebug(b *testing.B) {
+	x := 123456789
+	y := 987654321
+	for i := 0; i < b.N; i++ {
+		x = x + y
 	}
 }
 
@@ -68,14 +78,20 @@ func TestSub(t *testing.T) {
 }
 
 func BenchmarkSub(b *testing.B) {
-	var z Int
-	x := NewIntFromString("123456789123456789123456789123456789")
-	y := NewIntFromString("-987654321987654321987654321987654321")
+	x := NewIntFromString("123456789")
+	y := NewIntFromString("987654321")
 	for i := 0; i < b.N; i++ {
-		z.Sub(x, y)
+		x.Sub(x, y)
 	}
 }
 
+func BenchmarkSubDebug(b *testing.B) {
+	x := 123456789
+	y := 987654321
+	for i := 0; i < b.N; i++ {
+		x = x - y
+	}
+}
 
 // test vectors for function Mul
 type argMul struct {
@@ -106,13 +122,20 @@ func TestMul(t *testing.T) {
 
 func BenchmarkMul(b *testing.B) {
 	var z Int
-	x := NewIntFromString("123456789123456789123456789123456789")
-	y := NewIntFromString("-987654321987654321987654321987654321")
+	x := NewIntFromString("123456789")
+	y := NewIntFromString("987654321")
 	for i := 0; i < b.N; i++ {
 		z.Mul(x, y)
 	}
 }
 
+func BenchmarkMulDebug(b *testing.B) {
+	y := int64(987654321)
+	for i := 0; i < b.N; i++ {
+		x := int64(123456789)
+		x = int64(x * y)
+	}
+}
 
 // test vectors for function Div
 type argDiv struct {
@@ -258,13 +281,54 @@ func TestMod(t *testing.T) {
 
 func BenchmarkMod(b *testing.B) {
 	var z Int
-	x := NewIntFromString("-98765432198765432198734567654567876789654321987654321")
-	y := NewIntFromString("123456789123456789123456789123456789")
+	x := NewIntFromString("123456789")
+	y := NewIntFromString("59374")
 	for i := 0; i < b.N; i++ {
 		z.Mod(x, y)
 	}
 }
 
+func BenchmarkModDebug(b *testing.B) {
+	var x int
+	y := 7681
+	for i := 0; i < b.N; i++ {
+		x = 58997761
+		x = x % y
+	}
+}
+
+func BenchmarkMontgomeryReduce(b *testing.B) {
+	q := NewInt(7681)
+	qInv := NewInt(7679)
+	montgomeryMod := NewInt(262143)
+	bitLen := uint32(18)
+	x := NewIntFromString("6703088")
+	for i := 0; i < b.N; i++ {
+		MontgomeryReduce(x, q, qInv, montgomeryMod, bitLen)
+	}
+}
+
+func BenchmarkMontgomeryReduceDebug(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		x := int64(6703088)
+		montgomeryReduce(x)
+	}
+}
+
+func BenchmarkBarrettReduce(b *testing.B) {
+	q := NewInt(7681)
+	x := NewIntFromString("6703088")
+	for i := 0; i < b.N; i++ {
+		BarrettReduce(x, q)
+	}
+}
+
+func BenchmarkBarrettReduceDebug(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		x := int64(6703088)
+		barrettReduce(x)
+	}
+}
 
 // test vectors for function Inv
 type argInv struct {
@@ -337,6 +401,132 @@ func BenchmarkNeg(b *testing.B) {
 	}
 }
 
+// test vectors for function Lsh
+type argLsh struct {
+	x *Int
+	m uint32
+	want *Int
+}
+var lshVec = []argLsh{
+	{NewInt(1), 2, NewInt(4)},
+	{NewInt(-1), 2, NewInt(-4)},
+	{NewInt(12345), 10, NewInt(12641280)},
+	{NewInt(123456789123456789), 10, NewIntFromString("126419752062419751936")},
+	{NewIntFromString("123456789123456789"), 20, NewIntFromString("129453826111917825982464")},
+	{NewIntFromString("-123456789123456789"), 20, NewIntFromString("-129453826111917825982464")},
+}
+
+func TestLsh(t *testing.T) {
+	var z Int
+	for i, testPair := range lshVec {
+		z.Lsh(testPair.x, testPair.m)
+		if !z.EqualTo(testPair.want) {
+			t.Errorf("Error Lsh test pair %v", i)
+		}
+	}
+}
+
+func BenchmarkLsh(b *testing.B) {
+	var z Int
+	x := NewIntFromString("123456789123456789")
+	y := uint32(5)
+	for i := 0; i < b.N; i++ {
+		z.Lsh(x, y)
+	}
+}
+
+func BenchmarkLshDebug(b *testing.B) {
+	var x int
+	y := uint32(5)
+	for i := 0; i < b.N; i++ {
+		x = 123456789123456789
+		x = x << y
+	}
+}
+
+// test vectors for function Rsh
+type argRsh struct {
+	x *Int
+	m uint32
+	want *Int
+}
+var rshVec = []argRsh{
+	{NewInt(1), 2, NewInt(0)},
+	{NewInt(-1), 2, NewInt(-1)},
+	{NewInt(12345), 10, NewInt(12)},
+	{NewInt(123456789123456789), 10, NewIntFromString("120563270628375")},
+	{NewIntFromString("123456789123456789"), 20, NewIntFromString("117737568973")},
+	{NewIntFromString("-123456789123456789"), 20, NewIntFromString("-117737568974")},
+}
+
+func TestRsh(t *testing.T) {
+	var z Int
+	for i, testPair := range rshVec {
+		z.Rsh(testPair.x, testPair.m)
+		if !z.EqualTo(testPair.want) {
+			t.Errorf("Error Rsh test pair %v", i)
+		}
+	}
+}
+
+func BenchmarkRsh(b *testing.B) {
+	var z Int
+	x := NewIntFromString("123456789123456789")
+	y := uint32(5)
+	for i := 0; i < b.N; i++ {
+		z.Rsh(x, y)
+	}
+}
+
+func BenchmarkRshDebug(b *testing.B) {
+	var x int
+	y := uint32(5)
+	for i := 0; i < b.N; i++ {
+		x = 123456789123456789
+		x = x >> y
+	}
+}
+
+// test vectors for function And
+type argAnd struct {
+	x, y, want *Int
+}
+var andVec = []argAnd{
+	{NewInt(1), NewInt(2), NewInt(0)},
+	{NewInt(-1), NewInt(2), NewInt(2)},
+	{NewInt(-12345), NewInt(-54321), NewInt(-62521)},
+	{NewInt(123456789123456789), NewInt(-987654321), NewIntFromString("123456788438718213")},
+	{NewIntFromString("123456789123456789"), NewIntFromString("987654321987654321"), NewIntFromString("122892737510904337")},
+	{NewIntFromString("-123456789123456789"), NewIntFromString("987654321987654321"), NewIntFromString("864761584476749985")},
+}
+
+func TestAnd(t *testing.T) {
+	var z Int
+	for i, testPair := range andVec {
+		z.And(testPair.x, testPair.y)
+		if !z.EqualTo(testPair.want) {
+			t.Errorf("Error And test pair %v", i)
+		}
+	}
+}
+
+func BenchmarkAnd(b *testing.B) {
+	var z Int
+	x := NewIntFromString("123456789123456789")
+	y := NewIntFromString("987654321987654321")
+	for i := 0; i < b.N; i++ {
+		z.And(x, y)
+	}
+}
+
+func BenchmarkAndDebug(b *testing.B) {
+	var x int
+	y := 987654321987654321
+	for i := 0; i < b.N; i++ {
+		x = 123456789123456789
+		x = x & y
+	}
+}
 
 // test vectors for function Bits
 type argBits struct {

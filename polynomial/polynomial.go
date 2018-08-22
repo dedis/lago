@@ -3,15 +3,13 @@ package polynomial
 import (
 	"errors"
 	"github.com/dedis/student_18_lattices/bigint"
-	"github.com/LoCCS/bliss/poly"
 )
 
 type Poly struct {
 	coeffs []bigint.Int
 	n      uint32
 	q      bigint.Int
-	psiReverse []bigint.Int
-	psiInvReverse []bigint.Int
+	nttParams *nttParams
 }
 
 // NewPolynomial creates a new polynomial with a given degree N and module Q
@@ -20,9 +18,7 @@ func NewPolynomial(N uint32, Q bigint.Int) (*Poly, error) {
 		return nil, errors.New("polynomial degree N has to be power of 2")
 	}
 	nttparams, _ := GenerateNTTParameters(N, Q)
-	psiReverse := nttparams.PsiReverse
-	psiInvReverse := nttparams.PsiInvReverse
-	p := &Poly{make([]bigint.Int, N), N, Q, psiReverse, psiInvReverse}
+	p := &Poly{make([]bigint.Int, N), N, Q, nttparams}
 	for i := range p.coeffs {
 		p.coeffs[i].SetInt(0)
 	}
@@ -102,7 +98,6 @@ func (p *Poly) MulCoeffs(p1, p2 *Poly) (*Poly, error) {
 	}
 	for i := range p.coeffs {
 		p.coeffs[i].Mul(&p1.coeffs[i], &p2.coeffs[i])
-		p.coeffs[i].Mod(&p.coeffs[i], &p.q)
 	}
 	return p, nil
 }
@@ -114,7 +109,6 @@ func (p *Poly) MulScalar(p1 *Poly, scalar bigint.Int) (*Poly, error) {
 	}
 	for i := range p.coeffs {
 		p.coeffs[i].Mul(&p1.coeffs[i], &scalar)
-		//p.coeffs[i].Mod(&p1.coeffs[i], &p.q)
 	}
 	return p, nil
 }
@@ -134,39 +128,6 @@ func (p *Poly) MulPoly(p1, p2 *Poly) (*Poly, error) {
 	if p != p2 {
 		p2.InverseNTT()
 	}
-	return p, nil
-}
-
-func (p *Poly) DebugMulPoly(p1, p2 *Poly) (*Poly, error) {
-	if p.n != p1.n || !p.q.EqualTo(&p1.q) {
-		return nil, errors.New("unmatched degree or module")
-	}
-	// copy the coefficients of our poly to bliss.poly
-	coeffs1 := p1.GetCoefficientsInt64()
-	coeffs2 := p2.GetCoefficientsInt64()
-	_coeffs1 := make([]int32, p.n)
-	_coeffs2 := make([]int32, p.n)
-	for i := range coeffs1 {
-		_coeffs1[i] = int32(coeffs1[i])
-		_coeffs2[i] = int32(coeffs2[i])
-	}
-
-	_p1, _ := poly.New(0)
-	_p1.SetData(_coeffs1)
-	_p2, _ := poly.New(0)
-	_p2.SetData(_coeffs2)
-
-	// multiply ntt
-	tmp1, _ := _p1.NTT()
-	tmp2, _ := _p2.MultiplyNTT(tmp1)
-
-	// copy back the coefficients after poly multiplication
-	_coeffs := tmp2.GetData()
-	coeffs := make([]bigint.Int, p.n)
-	for i := range coeffs {
-		coeffs[i].SetInt(int64(_coeffs[i]))
-	}
-	p.SetCoefficients(coeffs)
 	return p, nil
 }
 

@@ -133,14 +133,6 @@ func (r *Ring) MulPoly(r1, r2 *Ring) (*Ring, error) {
 	return r, nil
 }
 
-func (r *Ring) DebugMulPoly(r1, r2 *Ring) (*Ring, error) {
-	if r1.N != r2.N || !r1.Q.EqualTo(&r2.Q) {
-		return nil, errors.New("unmatched degree or module")
-	}
-	r.Poly.DebugMulPoly(r1.Poly, r2.Poly)
-	return r, nil
-}
-
 func (r *Ring) MulCoeffs(r1, r2 *Ring) (*Ring, error) {
 	if r.N != r1.N || !r.Q.EqualTo(&r1.Q) ||
 		r.N != r2.N || !r.Q.EqualTo(&r2.Q) ||

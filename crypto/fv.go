@@ -3,7 +3,6 @@ package crypto
 import (
 	"github.com/dedis/student_18_lattices/ring"
 	"github.com/dedis/student_18_lattices/bigint"
-	"fmt"
 )
 
 type FV struct {
@@ -60,9 +59,8 @@ func (fv *FV) Encrypt(m *Plaintext) *Ciphertext {
 	newM.MulScalar(m.Msg, delta)
 	newM.Mod(newM, fv.Q)
 
-	u := ring.NewUniformPoly(fv.N, fv.Q, *bigint.NewInt(int64(2)))
+	u := ring.NewRing(fv.N, fv.Q)
 	e1 := ring.NewGaussPoly(fv.N, fv.Q, fv.Sigma)
-	fmt.Println(e1.GetCoefficientsInt64())
 	e2 := ring.NewGaussPoly(fv.N, fv.Q, fv.Sigma)
 
 	c := new(Ciphertext)
