@@ -52,7 +52,6 @@ func TestNTT(t *testing.T) {
 		}
 
 		p, err := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)))
-		fmt.Println(p.nttParams.PsiReverse)
 		if err != nil {
 			t.Error("Error in creating new polynomial")
 		}
