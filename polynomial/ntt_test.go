@@ -14,7 +14,7 @@ import (
 
 // Test the correctness of NTT and InverseNTT functions with different params from test_data/testvector_ntt_i
 func TestNTT(t *testing.T) {
-	for i := 0; i <=0; i++ {
+	for i := 0; i <=2; i++ {
 		testfile, err := ioutil.ReadFile(fmt.Sprintf("test_data/testvector_ntt_%d", i))
 		if err != nil {
 			t.Errorf("Failed to open file: %s", err.Error())
@@ -50,8 +50,8 @@ func TestNTT(t *testing.T) {
 			}
 			nttCoeffs[i].SetInt(int64(tmp))
 		}
-
-		p, err := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)))
+		nttParams := GenerateNTTParams(uint32(n), *bigint.NewInt(int64(q)))
+		p, err := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)), nttParams)
 		if err != nil {
 			t.Error("Error in creating new polynomial")
 		}
@@ -130,9 +130,10 @@ func TestNTTCross(t *testing.T) {
 	nttResultBliss := nttResultBlissPoly.GetData()
 
 	// this.NTT
-	p1, _ := NewPolynomial(n, *q)
+	nttParams := GenerateNTTParams(uint32(n), *q)
+	p1, _ := NewPolynomial(n, *q, nttParams)
 	p1.SetCoefficients(coeffs1)
-	p2, _ := NewPolynomial(n, *q)
+	p2, _ := NewPolynomial(n, *q, nttParams)
 	p2.SetCoefficients(coeffs2)
 	p1.MulPoly(p1, p2)
 	nttResultThis := p1.GetCoefficientsInt64()
@@ -179,7 +180,8 @@ func BenchmarkNTT(b *testing.B) {
 		}
 		coeffs[i].SetInt(int64(tmp))
 	}
-	p, err := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)))
+	nttParams := GenerateNTTParams(uint32(n), *bigint.NewInt(int64(q)))
+	p, err := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)), nttParams)
 	if err != nil {
 		b.Error("Error in creating new polynomial")
 	}
@@ -218,7 +220,8 @@ func BenchmarkFastNTT(b *testing.B) {
 		}
 		coeffs[i].SetInt(int64(tmp))
 	}
-	p, err := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)))
+	nttParams := GenerateNTTParams(uint32(n), *bigint.NewInt(int64(q)))
+	p, err := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)), nttParams)
 	if err != nil {
 		b.Error("Error in creating new polynomial")
 	}
@@ -257,7 +260,8 @@ func BenchmarkDebugNTT(b *testing.B) {
 		}
 		coeffs[i] = int64(tmp)
 	}
-	p, err := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)))
+	nttParams := GenerateNTTParams(uint32(n), *bigint.NewInt(int64(q)))
+	p, err := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)), nttParams)
 	if err != nil {
 		b.Error("Error in creating new polynomial")
 	}
@@ -299,7 +303,8 @@ func BenchmarkDebugNTT2(b *testing.B) {
 		}
 		coeffs[i] = int64(tmp)
 	}
-	p, err := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)))
+	nttParams := GenerateNTTParams(uint32(n), *bigint.NewInt(int64(q)))
+	p, err := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)), nttParams)
 	if err != nil {
 		b.Error("Error in creating new polynomial")
 	}

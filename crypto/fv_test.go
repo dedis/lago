@@ -6,19 +6,24 @@ import (
 	"github.com/dedis/student_18_lattices/ring"
 )
 
-func TestFV(t *testing.T) {
+func TestFVContext(t *testing.T) {
 	N := uint32(256)
 	Q := bigint.NewInt(int64(8380417))
 	T := bigint.NewInt(int64(30))
 	fv := NewFVContext(N, *Q, *T)
-	fv.KeyGenerate()
-	plain := new(Plaintext)
-	plain.Msg = ring.NewUniformPoly(N, *Q, *T)
-	cipher := fv.Encrypt(plain)
-	newPlain := fv.Decrypt(cipher)
+	key := GenerateKey(fv)
+	plaintext1 := new(Plaintext)
+	plaintext1.value, _ = ring.NewUniformPoly(N, *Q, fv.NttParams, *T)
+	msg1 := plaintext1.value.GetCoefficientsInt64()
+	plaintext1.value.Poly.NTT()
 
-	msg1 := plain.Msg.GetCoefficientsInt64()
-	msg2 := newPlain.Msg.GetCoefficientsInt64()
+	encryptor := NewEncryptor(fv, &key.PubKey)
+	ciphertext := encryptor.Encrypt(plaintext1)
+
+	decryptor := NewDecryptor(fv, &key.SecKey)
+	plaintext2 := decryptor.Decrypt(ciphertext)
+
+	msg2 := plaintext2.value.GetCoefficientsInt64()
 	for i := range msg1 {
 		if msg1[i] != msg2[i] {
 			t.Errorf("Error in FV: expected %v, got %v", msg1[i], msg2[i])

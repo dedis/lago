@@ -9,20 +9,44 @@ type Poly struct {
 	coeffs []bigint.Int
 	n      uint32
 	q      bigint.Int
-	nttParams *nttParams
+	nttParams *NttParams
 }
 
 // NewPolynomial creates a new polynomial with a given degree N and module Q
-func NewPolynomial(N uint32, Q bigint.Int) (*Poly, error) {
-	if (N & (N - 1)) != 0 { // judge if N is power of 2
-		return nil, errors.New("polynomial degree N has to be power of 2")
-	}
-	nttparams, _ := GenerateNTTParameters(N, Q)
-	p := &Poly{make([]bigint.Int, N), N, Q, nttparams}
-	for i := range p.coeffs {
-		p.coeffs[i].SetInt(0)
-	}
+func NewPolynomial(N uint32, Q bigint.Int, NttParams *NttParams) (*Poly, error) {
+	p := &Poly{make([]bigint.Int, N), N, Q, NttParams}
 	return p, nil
+}
+
+// GenerateNTTParams generates the ntt params of polynomial p
+func GenerateNTTParams(N uint32, Q bigint.Int) *NttParams {
+	//TODO : Primality Test
+	if (N & (N - 1)) != 0 { // if N is power of 2
+		panic("polynomial degree N has to be power of 2")
+	}
+	if !new(bigint.Int).Mod( // if Q mod 2N = 1
+		&Q, new(bigint.Int).Mul(bigint.NewInt(2), bigint.NewInt(int64(N)))).EqualTo(bigint.NewInt(1)) {
+			panic("polynomial modulus Q mod 2*N should be 1")
+	}
+	nttparams, err := generateNTTParameters(N, Q)
+	if err != nil {
+		panic(err)
+	}
+	return nttparams
+}
+
+// SetNTTParams sets the nttParams of polynomial p to the given nttparams
+func (p *Poly) SetNTTParams(nttparams *NttParams) error {
+	if nttparams != nil {
+		return errors.New("invalid ntt params")
+	}
+	p.nttParams = nttparams
+	return nil
+}
+
+// GetNTTParams returns the nttParams of polynomial p
+func (p *Poly) GetNTTParams() *NttParams {
+	return p.nttParams
 }
 
 // SetCoefficients sets the coefficient of target polynomial p to coeffs
@@ -121,6 +145,7 @@ func (p *Poly) MulPoly(p1, p2 *Poly) (*Poly, error) {
 	p1.NTT()
 	p2.NTT()
 	p.MulCoeffs(p1, p2)
+	p.Mod(p, p.q)
 	p.InverseNTT()
 	if p != p1 {
 		p1.InverseNTT()
@@ -131,6 +156,7 @@ func (p *Poly) MulPoly(p1, p2 *Poly) (*Poly, error) {
 	return p, nil
 }
 
+// Div divides each coefficient of p1 by scalar, and sets p to the floor division results
 func (p *Poly) Div(p1 *Poly, scalar bigint.Int) (*Poly, error) {
 	if p.n != p1.n || !p.q.EqualTo(&p1.q) {
 		return nil, errors.New("unmatched degree or module")
@@ -144,6 +170,7 @@ func (p *Poly) Div(p1 *Poly, scalar bigint.Int) (*Poly, error) {
 	return p, nil
 }
 
+// DivRound divides each coefficient of p1 by scalar, and sets p to the round division results
 func (p *Poly) DivRound(p1 *Poly, scalar bigint.Int) (*Poly, error) {
 	if p.n != p1.n || !p.q.EqualTo(&p1.q) {
 		return nil, errors.New("unmatched degree or module")
@@ -157,12 +184,46 @@ func (p *Poly) DivRound(p1 *Poly, scalar bigint.Int) (*Poly, error) {
 	return p, nil
 }
 
+// Mod sets p to p1 mod m
 func (p *Poly) Mod(p1 *Poly, m bigint.Int) (*Poly, error) {
 	if p.n != p1.n || !p.q.EqualTo(&p1.q) {
 		return nil, errors.New("unmatched degree or module")
 	}
 	for i := range p.coeffs {
 		p.coeffs[i].Mod(&p1.coeffs[i], &m)
+	}
+	return p, nil
+}
+
+// And sets p to p1&m
+func (p *Poly) And(p1 *Poly, m bigint.Int) (*Poly, error) {
+	if p.n != p1.n || !p.q.EqualTo(&p1.q) {
+		return nil, errors.New("unmatched degree or module")
+	}
+	for i := range p.coeffs {
+		p.coeffs[i].And(&p1.coeffs[i], &m)
+	}
+	return p, nil
+}
+
+// Lsh sets p to p1 << m
+func (p *Poly) Lsh(p1 *Poly, m uint32) (*Poly, error) {
+	if p.n != p1.n || !p.q.EqualTo(&p1.q) {
+		return nil, errors.New("unmatched degree or module")
+	}
+	for i := range p.coeffs {
+		p.coeffs[i].Lsh(&p1.coeffs[i], m)
+	}
+	return p, nil
+}
+
+// Rsh sets p to p1 >> m
+func (p *Poly) Rsh(p1 *Poly, m uint32) (*Poly, error) {
+	if p.n != p1.n || !p.q.EqualTo(&p1.q) {
+		return nil, errors.New("unmatched degree or module")
+	}
+	for i := range p.coeffs {
+		p.coeffs[i].Rsh(&p1.coeffs[i], m)
 	}
 	return p, nil
 }

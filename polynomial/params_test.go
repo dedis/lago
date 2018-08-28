@@ -45,8 +45,8 @@ func TestPrimitiveRoot(t *testing.T) {
 	}
 }
 
-func TestGenerateNTTParameters(t *testing.T) {
-	for i := 0; i <=0; i++ {
+func TestGenerateNTTParams(t *testing.T) {
+	for i := 0; i <=1; i++ {
 		testfile, err := ioutil.ReadFile(fmt.Sprintf("test_data/testvector_params_%d", i))
 		if err != nil {
 			t.Errorf("Failed to open file: %s", err.Error())
@@ -65,8 +65,7 @@ func TestGenerateNTTParameters(t *testing.T) {
 			t.Errorf("Invalid integer: %v", vs[1])
 		}
 
-		params, _ := GenerateNTTParameters(uint32(n), *bigint.NewInt(int64(q)))
-
+		params := GenerateNTTParams(uint32(n), *bigint.NewInt(int64(q)))
 		psiReverseString := strings.Split(strings.TrimSpace(vs[2]), ", ")
 		psiReverse := make([]bigint.Int, n)
 		for i := range psiReverse {

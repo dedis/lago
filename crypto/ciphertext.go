@@ -3,13 +3,24 @@ package crypto
 import (
 	"github.com/dedis/student_18_lattices/ring"
 	"github.com/dedis/student_18_lattices/bigint"
+	"github.com/dedis/student_18_lattices/polynomial"
 )
 
 type Ciphertext struct {
-	c0 *ring.Ring
-	c1 *ring.Ring
+	value [2]*ring.Ring
 }
 
-func (c *Ciphertext) GetCiphertext() ([]bigint.Int, []bigint.Int){
-	return c.c0.GetCoefficients(), c.c1.GetCoefficients()
+// NewCiphertext creates a new ciphertext
+func NewCiphertext(n uint32, q bigint.Int, nttParams *polynomial.NttParams) *Ciphertext {
+	ciphertext := new(Ciphertext)
+	err := *new(error)
+	ciphertext.value[0], err = ring.NewRing(n, q, nttParams)
+	if err != nil {
+		panic(err)
+	}
+	ciphertext.value[1], err = ring.NewRing(n, q, nttParams)
+	if err != nil {
+		panic(err)
+	}
+	return ciphertext
 }

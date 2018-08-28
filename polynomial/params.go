@@ -4,7 +4,7 @@ import (
 	"github.com/dedis/student_18_lattices/bigint"
 )
 
-type nttParams struct {
+type NttParams struct {
 	n, nReverse uint32
 	q bigint.Int
 	PsiReverse []bigint.Int
@@ -16,10 +16,8 @@ type nttParams struct {
 }
 
 // generateNTTParameters generates the parameters for NTT and inverse NTT transformations.
-func GenerateNTTParameters(N uint32, Q bigint.Int) (*nttParams, error) {
-	// TODO Check if Q is a prime number
-	// TODO Check if Q/(2N) is an integer
-	newNttParams := new(nttParams)
+func generateNTTParameters(N uint32, Q bigint.Int) (*NttParams, error) {
+	newNttParams := new(NttParams)
 	// set n
 	newNttParams.n = N
 	// set nReverse

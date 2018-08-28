@@ -43,7 +43,8 @@ func TestPolynomial(t *testing.T) {
 			}
 			p1Coeffs[i].SetInt(int64(tmp))
 		}
-		p1, _ := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)))
+		nttParams := GenerateNTTParams(uint32(n), *bigint.NewInt(int64(q)))
+		p1, _ := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)), nttParams)
 		p1.SetCoefficients(p1Coeffs)
 
 		// load second polynomial
@@ -56,7 +57,7 @@ func TestPolynomial(t *testing.T) {
 			}
 			p2Coeffs[i].SetInt(int64(tmp))
 		}
-		p2, _ := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)))
+		p2, _ := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)), nttParams)
 		p2.SetCoefficients(p2Coeffs)
 
 		// load add coefficients
@@ -156,8 +157,7 @@ func TestPolynomial(t *testing.T) {
 			}
 			divRoundCoeffs[i].SetInt(int64(tmp))
 		}
-
-		pTest, _ := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)))
+		pTest, _ := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)), nttParams)
 		// Test add
 		pTest.AddMod(p1, p2)
 		for i := range pTest.coeffs {
@@ -181,6 +181,7 @@ func TestPolynomial(t *testing.T) {
 		}
 		// Test mulCoeffs
 		pTest.MulCoeffs(p1, p2)
+		pTest.Mod(pTest, *bigint.NewInt(int64(q)))
 		for i := range pTest.coeffs {
 			if !pTest.coeffs[i].EqualTo(&mulCoeffsCoeffs[i]) {
 				t.Errorf("Error in mulCoeffs coeffs: index %v, value %v", i, pTest.coeffs[i])
@@ -188,6 +189,7 @@ func TestPolynomial(t *testing.T) {
 		}
 		// Test mulScalar
 		pTest.MulScalar(p1, *bigint.NewInt(int64(scalar)))
+		pTest.Mod(pTest, *bigint.NewInt(int64(q)))
 		for i := range pTest.coeffs {
 			if !pTest.coeffs[i].EqualTo(&mulScalarCoeffs[i]) {
 				t.Errorf("Error in mulScalar coeffs: index %v, value %v", i, pTest.coeffs[i])
@@ -197,7 +199,7 @@ func TestPolynomial(t *testing.T) {
 		pTest.MulPoly(p1, p2)
 		for i := range pTest.coeffs {
 			if !pTest.coeffs[i].EqualTo(&mulPolyCoeffs[i]) {
-				t.Errorf("Error in mulPoly coeffs: index %v, value %v", i, pTest.coeffs[i])
+				t.Errorf("Error in mulPoly coeffs: index %v, expected %v, got %v", i, mulPolyCoeffs[i], pTest.coeffs[i])
 			}
 		}
 		// Test div
