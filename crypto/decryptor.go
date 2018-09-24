@@ -17,11 +17,12 @@ func NewDecryptor(ctx *FVContext, secretkey *SecretKey) *Decryptor {
 // both ciphertext and plaintext are in NTT form.
 func (decryptor *Decryptor) Decrypt(ciphertext *Ciphertext) *Plaintext {
 	plaintext := NewPlaintext(decryptor.ctx.N, decryptor.ctx.Q, decryptor.ctx.NttParams)
-	plaintext.value.MulCoeffs(ciphertext.value[1], *decryptor.secretkey)
-	plaintext.value.Add(plaintext.value, ciphertext.value[0])
-	plaintext.value.Poly.InverseNTT()
-	plaintext.value.MulScalar(plaintext.value, decryptor.ctx.T)
-	plaintext.value.DivRound(plaintext.value, decryptor.ctx.Q)
-	plaintext.value.Mod(plaintext.value, decryptor.ctx.T)
+	plaintext.Value.MulCoeffs(ciphertext.value[1], *decryptor.secretkey)
+	plaintext.Value.Add(plaintext.Value, ciphertext.value[0])
+	plaintext.Value.Poly.InverseNTT()
+	center(plaintext.Value)
+	plaintext.Value.MulScalar(plaintext.Value, decryptor.ctx.T)
+	plaintext.Value.DivRound(plaintext.Value, decryptor.ctx.Q)
+	plaintext.Value.Mod(plaintext.Value, decryptor.ctx.T)
 	return plaintext
 }

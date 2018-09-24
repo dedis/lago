@@ -228,7 +228,7 @@ func BenchmarkFastNTT(b *testing.B) {
 	p.SetCoefficients(coeffs)
 	b.ResetTimer()
 	for i :=0; i < b.N; i++ {
-		p.FastNTT()
+		p.NTTFast()
 	}
 }
 
@@ -271,7 +271,7 @@ func BenchmarkDebugNTT(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i :=0; i < b.N; i++ {
-		DebugNTT(coeffs, psiReverse, int64(q), int64(n))
+		NTTFastInt64(coeffs, psiReverse, int64(q), int64(n))
 	}
 }
 
@@ -314,7 +314,7 @@ func BenchmarkDebugNTT2(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i :=0; i < b.N; i++ {
-		DebugNTT2(coeffs, psiReverse, int64(q), int64(n))
+		NTTInt64(coeffs, psiReverse, int64(q), int64(n))
 	}
 }
 

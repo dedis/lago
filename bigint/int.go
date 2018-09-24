@@ -1,7 +1,7 @@
 package bigint
 
 import (
-	"github.com/dedis/student_18_lattices/big"
+	"math/big"
 )
 
 // Int is a generic implementation of natural arithmetic on integers,
@@ -175,7 +175,8 @@ func (i *Int) Int64() int64 {
 	return i.Value.Int64()
 }
 
-
+// MontgomeryReduce implements montgomery reduction algorithm on bigint.Int data type.
+// This function can also be found in polynomial/ntt.go
 func MontgomeryReduce(x, q, qInv, montgomeryMod *Int, bitLen uint32) *Int{
 	u := new(Int).Mul(x, qInv)
 	u.And(u, montgomeryMod)
@@ -188,6 +189,8 @@ func MontgomeryReduce(x, q, qInv, montgomeryMod *Int, bitLen uint32) *Int{
 	return x
 }
 
+// montgomeryReduce implements montgomery reduction algorithm on int64 data type.
+// This function can also be found in polynomial/ntt.go
 func montgomeryReduce(a int64) int64 {
 	u := a * 7679
 	u &= (1 << 18) - 1
@@ -200,6 +203,8 @@ func montgomeryReduce(a int64) int64 {
 	return a
 }
 
+// BarrettReduce implements short barrett reduction algorithm on bigint.Int data type.
+// This function can also be found in polynomial/ntt.go
 func BarrettReduce(x, q *Int) *Int {
 	u := new(Int).Rsh(x, uint32(13)) // ((uint32_t) a * sinv) >> 16
 	u.Mul(u, q)
@@ -207,6 +212,8 @@ func BarrettReduce(x, q *Int) *Int {
 	return x
 }
 
+// barrettReduce implements short barrett reduction algorithm on int64 data type.
+// This function can also be found in polynomial/ntt.go
 func barrettReduce(a int64) int64 {
 	u := int64(a >> 13) // ((uint32_t) a * sinv) >> 16
 	u *= 7681

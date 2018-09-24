@@ -43,6 +43,7 @@ func TestPolynomial(t *testing.T) {
 			}
 			p1Coeffs[i].SetInt(int64(tmp))
 		}
+
 		nttParams := GenerateNTTParams(uint32(n), *bigint.NewInt(int64(q)))
 		p1, _ := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)), nttParams)
 		p1.SetCoefficients(p1Coeffs)
@@ -202,6 +203,13 @@ func TestPolynomial(t *testing.T) {
 				t.Errorf("Error in mulPoly coeffs: index %v, expected %v, got %v", i, mulPolyCoeffs[i], pTest.coeffs[i])
 			}
 		}
+		// Test nativeMulPoly
+		pTest.NaiveMultPoly(p1, p2)
+		for i := range pTest.coeffs {
+			if !pTest.coeffs[i].EqualTo(&mulPolyCoeffs[i]) {
+				t.Errorf("Error in nativeMulPoly coeffs: index %v, expected %v, got %v", i, mulPolyCoeffs[i], pTest.coeffs[i])
+			}
+		}
 		// Test div
 		pTest.Div(p1, *bigint.NewInt(int64(divisor)))
 		for i := range pTest.coeffs {
@@ -216,5 +224,55 @@ func TestPolynomial(t *testing.T) {
 				t.Errorf("Error in divRound coeffs: DivRound(%v, %v), expected %v, got, %v", p1Coeffs[i].Int64(), divisor, divRoundCoeffs[i], pTest.coeffs[i])
 			}
 		}
+	}
+}
+
+
+func BenchmarkPolynomial(b *testing.B) {
+	for i := 0; i <=0; i++ {
+		testfile, _ := ioutil.ReadFile(fmt.Sprintf("test_data/testvector_polynomial_%d", i))
+		filecontent := strings.TrimSpace(string(testfile))
+		vs := strings.Split(filecontent, "\n")
+
+		// load q
+		q, _ := strconv.Atoi(vs[0])
+
+		// load n
+		n, _ := strconv.Atoi(vs[1])
+
+		// load first polynomial
+		p1String := strings.Split(strings.TrimSpace(vs[2]), ", ")
+		p1Coeffs := make([]bigint.Int, n)
+		for i := range p1Coeffs {
+			tmp, _ := strconv.Atoi(p1String[i])
+			p1Coeffs[i].SetInt(int64(tmp))
+		}
+		nttParams := GenerateNTTParams(uint32(n), *bigint.NewInt(int64(q)))
+		p1, _ := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)), nttParams)
+		p1.SetCoefficients(p1Coeffs)
+
+		// load second polynomial
+		p2String := strings.Split(strings.TrimSpace(vs[3]), ", ")
+		p2Coeffs := make([]bigint.Int, n)
+		for i := range p2Coeffs {
+			tmp, _ := strconv.Atoi(p2String[i])
+			p2Coeffs[i].SetInt(int64(tmp))
+		}
+		p2, _ := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)), nttParams)
+		p2.SetCoefficients(p2Coeffs)
+
+		pTest, _ := NewPolynomial(uint32(n), *bigint.NewInt(int64(q)), nttParams)
+
+		b.ResetTimer()
+
+		// Test mulPoly
+		for i := 0; i < b.N; i++ {
+			pTest.MulPoly(p1, p2)
+		}
+
+		//// Test nativeMulPoly
+		//for i := 0; i < b.N; i++ {
+		//	pTest.NaiveMultPoly(p1, p2)
+		//}
 	}
 }

@@ -2,8 +2,8 @@ package bigint
 
 import (
 	"testing"
+	"math"
 )
-
 
 // test vectors for function Add
 type argAdd struct {
@@ -166,10 +166,18 @@ func TestDiv(t *testing.T) {
 
 func BenchmarkDiv(b *testing.B) {
 	var z Int
-	x := NewIntFromString("987654321987654321987654321987654321")
-	y := NewIntFromString("-123456789123456789123456789123456789")
+	x := NewIntFromString("987654321")
+	y := NewIntFromString("123456789")
 	for i := 0; i < b.N; i++ {
 		z.Div(x, y)
+	}
+}
+
+func BenchmarkDivDebug(b *testing.B) {
+	y := int64(123456789)
+	for i := 0; i < b.N; i++ {
+		x := int64(987654321)
+		x = int64(math.Ceil(float64(x / y)))
 	}
 }
 
@@ -205,13 +213,20 @@ func TestDivRound(t *testing.T) {
 
 func BenchmarkDivRound(b *testing.B) {
 	var z Int
-	x := NewIntFromString("987654321987654321987654321987654321")
-	y := NewIntFromString("-123456789123456789123456789123456789")
+	x := NewIntFromString("987654321")
+	y := NewIntFromString("123456789")
 	for i := 0; i < b.N; i++ {
 		z.DivRound(x, y)
 	}
 }
 
+func BenchmarkDivRoundDebug(b *testing.B) {
+	y := int64(123456789)
+	for i := 0; i < b.N; i++ {
+		x := int64(987654321)
+		x = int64(math.Round(float64(x / y)))
+	}
+}
 
 // test vectors for function Exp
 type argExp struct {
@@ -240,14 +255,13 @@ func TestExp(t *testing.T) {
 
 func BenchmarkExp(b *testing.B) {
 	var z Int
-	x := NewIntFromString("987654321987654321987654321987654321")
+	x := NewIntFromString("987654321")
 	y := NewIntFromString("12345")
 	m := NewIntFromString("6780883635459973527839456474")
 	for i := 0; i < b.N; i++ {
 		z.Exp(x, y, m)
 	}
 }
-
 
 // test vectors for function Mod
 type argMod struct {
@@ -281,18 +295,18 @@ func TestMod(t *testing.T) {
 
 func BenchmarkMod(b *testing.B) {
 	var z Int
-	x := NewIntFromString("123456789")
-	y := NewIntFromString("59374")
+	x := NewIntFromString("987654321")
+	y := NewIntFromString("7681")
 	for i := 0; i < b.N; i++ {
 		z.Mod(x, y)
 	}
 }
 
 func BenchmarkModDebug(b *testing.B) {
-	var x int
-	y := 7681
+	var x int64
+	y := int64(7681)
 	for i := 0; i < b.N; i++ {
-		x = 58997761
+		x = 987654321
 		x = x % y
 	}
 }
@@ -302,7 +316,7 @@ func BenchmarkMontgomeryReduce(b *testing.B) {
 	qInv := NewInt(7679)
 	montgomeryMod := NewInt(262143)
 	bitLen := uint32(18)
-	x := NewIntFromString("6703088")
+	x := NewIntFromString("987654321")
 	for i := 0; i < b.N; i++ {
 		MontgomeryReduce(x, q, qInv, montgomeryMod, bitLen)
 	}
@@ -310,7 +324,7 @@ func BenchmarkMontgomeryReduce(b *testing.B) {
 
 func BenchmarkMontgomeryReduceDebug(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		x := int64(6703088)
+		x := int64(987654321)
 		montgomeryReduce(x)
 	}
 }
@@ -428,7 +442,7 @@ func TestLsh(t *testing.T) {
 
 func BenchmarkLsh(b *testing.B) {
 	var z Int
-	x := NewIntFromString("123456789123456789")
+	x := NewIntFromString("987654321")
 	y := uint32(5)
 	for i := 0; i < b.N; i++ {
 		z.Lsh(x, y)
@@ -436,10 +450,10 @@ func BenchmarkLsh(b *testing.B) {
 }
 
 func BenchmarkLshDebug(b *testing.B) {
-	var x int
+	var x int64
 	y := uint32(5)
 	for i := 0; i < b.N; i++ {
-		x = 123456789123456789
+		x = 987654321
 		x = x << y
 	}
 }
@@ -471,7 +485,7 @@ func TestRsh(t *testing.T) {
 
 func BenchmarkRsh(b *testing.B) {
 	var z Int
-	x := NewIntFromString("123456789123456789")
+	x := NewIntFromString("987654321")
 	y := uint32(5)
 	for i := 0; i < b.N; i++ {
 		z.Rsh(x, y)
@@ -479,10 +493,10 @@ func BenchmarkRsh(b *testing.B) {
 }
 
 func BenchmarkRshDebug(b *testing.B) {
-	var x int
+	var x int64
 	y := uint32(5)
 	for i := 0; i < b.N; i++ {
-		x = 123456789123456789
+		x = 987654321
 		x = x >> y
 	}
 }
@@ -520,10 +534,10 @@ func BenchmarkAnd(b *testing.B) {
 }
 
 func BenchmarkAndDebug(b *testing.B) {
-	var x int
-	y := 987654321987654321
+	var x int64
+	y := int64(123456789)
 	for i := 0; i < b.N; i++ {
-		x = 123456789123456789
+		x = 987654321
 		x = x & y
 	}
 }

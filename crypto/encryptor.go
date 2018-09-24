@@ -21,12 +21,13 @@ func NewEncryptor(ctx *FVContext, publickey *PublicKey) *Encryptor {
 // Encrypt encrypts plaintext to ciphertext with encryptor parameters,
 // both plaintext and ciphertext are in NTT form.
 func (encryptor *Encryptor) Encrypt(plaintext *Plaintext) *Ciphertext {
+	plaintext.Value.Poly.NTT()
 	// deltaM = delta * m
 	deltaM, err := ring.NewRing(encryptor.ctx.N, encryptor.ctx.Q, encryptor.ctx.NttParams)
 	if err != nil {
 		panic(err)
 	}
-	deltaM.MulScalar(plaintext.value, encryptor.ctx.Delta)
+	deltaM.MulScalar(plaintext.Value, encryptor.ctx.Delta)
 
 	// u sampled from R_2, e1 and e2 sampled from gaussian
 	u, err := ring.NewUniformPoly(encryptor.ctx.N, encryptor.ctx.Q, encryptor.ctx.NttParams, *bigint.NewInt(2))
@@ -57,5 +58,6 @@ func (encryptor *Encryptor) Encrypt(plaintext *Plaintext) *Ciphertext {
 	ciphertext.value[1].MulCoeffs(encryptor.publickey[1], u)
 	ciphertext.value[1].Add(ciphertext.value[1], e2)
 
+	plaintext.Value.Poly.InverseNTT()
 	return ciphertext
 }

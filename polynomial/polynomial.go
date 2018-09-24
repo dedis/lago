@@ -37,9 +37,11 @@ func GenerateNTTParams(N uint32, Q bigint.Int) *NttParams {
 
 // SetNTTParams sets the nttParams of polynomial p to the given nttparams
 func (p *Poly) SetNTTParams(nttparams *NttParams) error {
-	if nttparams != nil {
+	if nttparams == nil {
 		return errors.New("invalid ntt params")
 	}
+	p.n = nttparams.n
+	p.q = nttparams.q
 	p.nttParams = nttparams
 	return nil
 }
@@ -153,6 +155,32 @@ func (p *Poly) MulPoly(p1, p2 *Poly) (*Poly, error) {
 	if p != p2 {
 		p2.InverseNTT()
 	}
+	return p, nil
+}
+
+// NaiveMultPoly implements a very basic polynomial multiplication,
+// its results are the same with MulPoly.
+func (p *Poly) NaiveMultPoly(p1, p2 *Poly) (*Poly, error) {
+	r := make([]bigint.Int, p.n * 2)
+	coeffs := make([]bigint.Int, p.n)
+	coeffs1 := p1.GetCoefficients()
+	coeffs2 := p2.GetCoefficients()
+	tmp := new(bigint.Int)
+	for i := uint32(0); i < p1.n; i++ {
+		for j := uint32(0); j < p2.n; j++ {
+			tmp.Mul(&coeffs1[i], &coeffs2[j])
+			r[i+j].Add(&r[i+j], tmp)
+			r[i+j].Mod(&r[i+j], &p.q)
+		}
+	}
+	for i := p.n; i < 2*p.n-1; i++ {
+		r[i-p.n].Sub(&r[i-p.n], &r[i])
+		r[i-p.n].Mod(&r[i-p.n], &p.q)
+	}
+	for i := uint32(0); i < p.n; i++ {
+		coeffs[i].SetBigInt(&r[i])
+	}
+	p.SetCoefficients(coeffs)
 	return p, nil
 }
 

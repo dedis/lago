@@ -3,6 +3,7 @@ package crypto
 import (
 	"github.com/dedis/student_18_lattices/ring"
 	"github.com/dedis/student_18_lattices/bigint"
+	"math"
 )
 
 type Key struct {
@@ -30,7 +31,7 @@ func GenerateKey(fv *FVContext) *Key {
 	key.SecKey.Poly.NTT()  // store secret key in NTT form
 
 	// generate public key: PubKey[0] = e - a * sk, PubKey[1] = a
-	key.PubKey[1], err = ring.NewGaussPoly(fv.N, fv.Q, fv.NttParams, fv.Sigma)
+	key.PubKey[1], err = ring.NewUniformPoly(fv.N, fv.Q, fv.NttParams,  *bigint.NewInt(int64(2)))
 	if err != nil {
 		panic(err)
 	}
@@ -57,11 +58,11 @@ func GenerateKey(fv *FVContext) *Key {
 	}
 
 	// generate evaluation key
-	l := fv.Q.Value.BitLen()
+	key.EvaSize = 1
+	l := int(math.Floor(float64(fv.Q.Value.BitLen() - 1) / float64(key.EvaSize))) + 1
 	key.EvaKey = make([][2]*ring.Ring, l)
-	key.EvaSize = 16
 
-	w := bigint.NewInt(1)  // decomposition base, corresponding to T^i in the paper, here we choose T=2
+	w := bigint.NewInt(1)  // decomposition base, corresponding to T^i in the paper, here T=2^key.EvaSize
 	for i := 0; i < l ; i++ {
 		// evaluationKey[i][1] = a_i, where a_i sampled from R_q
 		key.EvaKey[i][1], err = ring.NewUniformPoly(fv.N, fv.Q, fv.NttParams, fv.Q)

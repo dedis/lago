@@ -3,8 +3,6 @@ package ring
 import (
 	"github.com/dedis/student_18_lattices/bigint"
 	"github.com/dedis/student_18_lattices/polynomial"
-	"github.com/LoCCS/bliss/sampler"
-	"github.com/LoCCS/bliss/poly"
 )
 
 type Ring struct {
@@ -13,6 +11,7 @@ type Ring struct {
 	Poly *polynomial.Poly
 }
 
+// NewRing creates a new polynomial ring with given parameters.
 func NewRing(n uint32, q bigint.Int, nttParams *polynomial.NttParams) (*Ring, error) {
 	r := new(Ring)
 	err := *new(error)
@@ -22,7 +21,8 @@ func NewRing(n uint32, q bigint.Int, nttParams *polynomial.NttParams) (*Ring, er
 	return r, err
 }
 
-func NewCopyRing(r1 *Ring) (*Ring, error) {
+// CopyRing copies a polynomial ring.
+func CopyRing(r1 *Ring) (*Ring, error) {
 	r := new(Ring)
 	err := *new(error)
 	r.N = r1.N
@@ -58,29 +58,7 @@ func NewGaussPoly(n uint32, q bigint.Int, nttParams *polynomial.NttParams, sigma
 			break
 		}
 	}
-	r.Poly.SetCoefficients(coeffs)
-	return r, err
-}
 
-func NewGaussPolyFromBLISS(n uint32, q bigint.Int, nttParams *polynomial.NttParams) (*Ring, error) {
-	seed := make([]uint8, sampler.SHA_512_DIGEST_LENGTH)
-	for i := 0; i < len(seed); i++ {
-		seed[i] = uint8(i % 8)
-	}
-	entropy, _ := sampler.NewEntropy(seed)
-	mySampler, _ := sampler.New(0, entropy)
-	gaussPoly := poly.GaussPoly(0, mySampler)
-
-	r := new(Ring)
-	err := *new(error)
-	r.N = n
-	r.Q = q
-	r.Poly, err = polynomial.NewPolynomial(n, q, nttParams)
-	coeffs := make([]bigint.Int, n)
-	_coeffs := gaussPoly.GetData()
-	for i := range coeffs {
-		coeffs[i].SetInt(int64(_coeffs[i]))
-	}
 	r.Poly.SetCoefficients(coeffs)
 	return r, err
 }
@@ -97,6 +75,7 @@ func NewUniformPoly(n uint32, q bigint.Int, nttParams *polynomial.NttParams, v b
 	for i := range coeffs {
 		coeffs[i].SetInt(int64(randUniform(v.Uint32())))
 	}
+
 	r.Poly.SetCoefficients(coeffs)
 	return r, err
 }
