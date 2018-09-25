@@ -1,6 +1,6 @@
 # LAGO: Lattice Cryptography Library in Golang
 
-This package provides a toolbox of lattice-based cryptographic primitives for Go. The library is still at an experimental stage and used for research purposes only.
+This package provides a toolbox of lattice-based cryptographic primitives for Go. The library is still at an experimental stage and should be used for research purposes only.
 
 The LAGO subpackages from the lowest to the highest abstraction level and their provided functionalities are as follows:
 
