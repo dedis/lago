@@ -12,7 +12,7 @@ The LAGO subpackages from the lowest to the highest abstraction level and their 
 
 ## Examples
 
-[main.go](https://github.com/dedis/student_18_lattices/blob/master/main.go) gives an example on how to use this library.
+[main.go](https://github.com/dedis/lago/blob/master/main.go) gives an example on how to use this library.
 In each subpackage you can find additional test files documenting further usage approaches.
 
 ## License

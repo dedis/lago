@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/dedis/student_18_lattices/bigint"
-	"github.com/dedis/student_18_lattices/crypto"
-	"github.com/dedis/student_18_lattices/encoding"
+	"github.com/dedis/lago/bigint"
+	"github.com/dedis/lago/crypto"
+	"github.com/dedis/lago/encoding"
 	"fmt"
 )
 

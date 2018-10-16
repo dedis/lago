@@ -2,7 +2,7 @@ package ring
 
 import (
 	"crypto/rand"
-	"github.com/dedis/student_18_lattices/bigint"
+	"github.com/dedis/lago/bigint"
 	"math"
 )
 

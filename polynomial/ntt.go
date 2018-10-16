@@ -1,7 +1,7 @@
 package polynomial
 
 import (
-	"github.com/dedis/student_18_lattices/bigint"
+	"github.com/dedis/lago/bigint"
 )
 
 // NTT performs the number theoretic transform on polynomial p's coefficients

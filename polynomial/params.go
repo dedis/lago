@@ -1,7 +1,7 @@
 package polynomial
 
 import (
-	"github.com/dedis/student_18_lattices/bigint"
+	"github.com/dedis/lago/bigint"
 )
 
 type NttParams struct {

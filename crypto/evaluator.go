@@ -1,8 +1,8 @@
 package crypto
 
 import (
-	"github.com/dedis/student_18_lattices/ring"
-	"github.com/dedis/student_18_lattices/bigint"
+	"github.com/dedis/lago/ring"
+	"github.com/dedis/lago/bigint"
 	"math"
 )
 
